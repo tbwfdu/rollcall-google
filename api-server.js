@@ -23,7 +23,7 @@ app.use(router.routes())
 
 // Adding CORS to remove Angular proxy dependency
 app.use(cors())
-//app.use(cors(corsOptions))
+
 const superagent = require('superagent');
 
 // Create some time for sleep
@@ -289,7 +289,6 @@ function listUser(user) {
 		.set(headers)
       	.then(res => {
 			const users = res.body;
-			//const users = res.body;
 			resolve(users);
       });
       
@@ -408,8 +407,6 @@ function getAllAccessGroups() {
 		.auth(accessBearer, { type: 'bearer'})
       	.then(res => {
 			const groups = res.body.Resources;
-			//const users = res.body;
-		//	console.log(users.users)
 			resolve(groups);
       });
       
@@ -1409,7 +1406,7 @@ function getSecrets() {
 
 //Request OAuth bearer token from Access
 function getBearer(creds) {
-	if(creds.length) {
+	if(creds.url) {
   	const queryArguments = {
     grant_type: 'client_credentials',
 	client_id: creds.client_id,

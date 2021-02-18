@@ -2,19 +2,58 @@ const fs = require('fs');
 const {google} = require('googleapis');
 const readline = require('readline');
 const chalk = require('chalk');
-
+const path = require('path');
 //######################################################################################################
 //
 // Google Authentication (from their quickstart)
 //
 //######################################################################################################
+console.log('====================================================================')
+console.log(chalk`{yellowBright.bold Google Credential Process Starting.}`);
+console.log(chalk`\n{yellowBright.bold Waiting for ./lib/credentials.json before continuing.}`);
+console.log('====================================================================')
 
 const SCOPES = ['https://www.googleapis.com/auth/admin.directory.user', 'https://www.googleapis.com/auth/admin.directory.group', 'https://www.googleapis.com/auth/admin.directory.orgunit'];
 const TOKEN_PATH = './lib/token.json'
 const CREDENTIALS_PATH = './lib/credentials.json'
 
+function checkExistsWithTimeout(filePath, timeout) {
+  return new Promise(function (resolve, reject) {
+
+  
+
+      var timer = setTimeout(function () {
+          watcher.close();
+          reject(new Error('File did not exist and was not created during the timeout.'));
+      }, timeout);
+
+      fs.access(filePath, fs.constants.R_OK,  function (err) {
+        
+          if (!err) {
+              clearTimeout(timer);
+              watcher.close();
+
+              resolve('true');
+          }
+      });
+
+      var dir = path.dirname(filePath);
+      var basename = path.basename(filePath);
+      var watcher = fs.watch(dir, function (eventType, filename) {
+        
+          if (eventType === 'rename' && filename === basename) {
+              clearTimeout(timer);
+              watcher.close();
+              resolve('true');
+          }
+      });
+  });
+}
+
+
 
 let creds;
+async function doAll() {
 fs.readFile(CREDENTIALS_PATH, (err, content) => {
   if (err) return console.error('Error loading client secret file', err);
   creds = JSON.parse(content);
@@ -50,13 +89,15 @@ function getNewToken(oauth2Client, callback) {
     scope: SCOPES,
   });
   tokenurl = authUrl
-  console.log('====================================================================')
-  console.log(chalk`{yellowBright.bold Authorise Rollcall to use your Google credentials by visiting this url:\n}`, authUrl);
+  console.log('\n====================================================================')
+  console.log(chalk`{yellowBright.bold Authorise Rollcall to use your Google credentials by visiting this url:}`)
+  console.log('====================================================================\n')
+  console.log(authUrl);
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-  console.log('====================================================================')
+  console.log('\n \n====================================================================')
   rl.question(chalk`{yellowBright.bold Enter the code from that page here:} `, (code) => {
 	console.log('====================================================================')
     rl.close();
@@ -108,3 +149,14 @@ function checkApi(auth) {
     }
   });
 }
+}
+
+async function doGoogle(){
+  const files = await checkExistsWithTimeout(CREDENTIALS_PATH, 600000);
+    if(files == 'true') {
+      console.log('credentials.json found.')
+        doAll()
+  
+    }
+  }
+  doGoogle();
