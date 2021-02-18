@@ -32,7 +32,7 @@ app.listen(_port, function () {
         888  T88b Y88..88P 888 888 Y88b.    888  888 888 888
         888   T88b "Y88P"  888 888  "Y8888P "Y888888 888 888 } {green
 ====================================================================}`+
-    chalk`\nRollcall Server UI is running listening on {bold http://localhost:${_port}}`+
+    chalk`\nRollcall Server UI is listening on {bold http://localhost:${_port}}`+
     chalk`{green \n====================================================================}`
     
         )

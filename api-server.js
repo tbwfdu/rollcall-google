@@ -74,7 +74,7 @@ console.log(chalk
         888  T88b Y88..88P 888 888 Y88b.    888  888 888 888
         888   T88b "Y88P"  888 888  "Y8888P "Y888888 888 888 } {white
 ====================================================================}`+
-    chalk`\nRollcall Server UI is running listening on {bold http://localhost:${PORT}}`+
+    chalk`\nRollcall Server API is listening on {bold http://localhost:${PORT}}`+
     chalk`{white \n====================================================================}`
     
         )
