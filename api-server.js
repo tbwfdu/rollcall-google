@@ -156,7 +156,6 @@ router.post('/createdir', async function (ctx, next) {
 	ctx.set('Access-Control-Allow-Origin', '*')
 	console.log('Creating Directory...')
 	const result = await createDir(request);
-	console.log(result)
 	ctx.body = result
 	await next();
 });
@@ -206,6 +205,19 @@ router.get('/getsyncschedule', async function (ctx, next) {
 	ctx.body = result
 	await next();
 	});
+
+//---Force Sync---//
+// Forces an immediate sync
+router.get('/forcesync', async function (ctx, next) {
+	
+	let result = await forceSync();
+	ctx.body = {
+		result: result
+	}
+	await next();
+	});
+
+
 
 //---Save Config for Access---//
 // Saves credentials entered in UI into database for Access OAuth
@@ -265,6 +277,8 @@ router.post('/clearconfig', async function (ctx) {
 	let result = await clearSyncConfig()
 	ctx.body = result
 	});
+
+
 
 //====================
 //--Let the initial Google Request do the auth and then re-use it below.
@@ -596,8 +610,7 @@ function createDir(request) {
 			if(err) {
 				resolve(err)
 			}
-			console.log(res.body)
-			resolve(res.body)
+			resolve(res.statuscode)
 		},
 		  );
 		
@@ -2141,6 +2154,67 @@ async function doAll() {
 	else {
 	
 	return parsedVals
+	}
+}
+
+async function forceSync() {
+
+	const prom = async function() {
+		const sched = await getSchedule()
+		const user = await getUserSyncSettings()
+		const group = await getGroupSyncSettings() 
+		if(sched.length) {
+			
+				let hUser
+				let hGroup
+				let hFrequency
+				if (user[0].synctype == 'userall'){hUser = 'All Users'}
+				if (user[0].synctype == 'userpartial'){hUser = `Selected Users`}
+				if (group[0].synctype == 'groupall'){hGroup = `All Groups`}
+				if (group[0].synctype == 'grouppartial'){hGroup = `Selected Groups`}
+				if (!group[0].synctype){hGroup = `No groups`}
+				if (sched[0].frequency == 'hour'){hFrequency = `Hourly (on the hour)`}
+				if (sched[0].frequency == 'day'){hFrequency = `Daily at ${sched[0].time}`}
+				if (sched[0].frequency == 'week'){hFrequency = `Weekly on ${sched[0].day} at ${sched[0].time}`}
+		
+				const buildSched = {
+					usertype: user[0].synctype,
+					uservalues: user[0].syncvalues,
+					grouptype: group[0].synctype,
+					groupvalues: group[0].syncvalues,
+					synctype: sched[0].frequency,
+					day: sched[0].day,
+					time: sched[0].time,
+					hourNumber: sched[0].hourNumber,
+					hUser: hUser,
+					hGroup: hGroup,
+					hFrequency: hFrequency
+				}
+				return (buildSched)
+			}
+	
+			else {
+			let noSched = []
+			
+			return noSched
+			}
+		}
+		const parsedVals = await prom()
+		const doSched = async function(){
+			if (parsedVals.synctype) {	
+				runSync(parsedVals.usertype, parsedVals.grouptype) 
+				return 'ok'
+			}
+			else {return 'notok'}
+		}
+	const result = await doSched() 
+	if (result == 'ok') {
+		
+		return 'ok'
+	}
+	else {
+	
+	return 'notok'
 	}
 }
 
